@@ -536,3 +536,436 @@ Greedy Update
 ```
 
 Once you understand this idea, many array interview problems become much easier to recognize and solve.
+
+
+
+# 2. Longest Repeating Character Replacement (LeetCode 424)
+
+## Problem Statement
+
+Given a string `s` consisting of uppercase English letters and an integer `k`, you can replace at most `k` characters in the string.
+
+Return the length of the longest substring containing the same character after performing at most `k` replacements.
+
+### Example
+
+```java
+Input:
+s = "AABABBA"
+k = 1
+
+Output:
+4
+```
+
+Explanation:
+
+Replace one `B` with `A`.
+
+```text
+AABA -> AAAA
+```
+
+The longest valid substring length is `4`.
+
+---
+
+# Why This Problem Is Important
+
+This is one of the most frequently asked Sliding Window interview problems.
+
+It teaches:
+
+* Sliding Window Technique
+* Frequency Counting
+* Window Validation
+* Optimization from O(n²) to O(n)
+* Two Pointer Approach
+
+Many interview problems are variations of this pattern.
+
+Examples:
+
+* Max Consecutive Ones III
+* Longest Substring with At Most K Distinct Characters
+* Fruits Into Baskets
+* Longest Substring Without Repeating Characters
+* Minimum Window Substring
+
+---
+
+# Key Insight
+
+For any window:
+
+```text
+Replacements Needed =
+Window Length - Frequency of Most Common Character
+```
+
+Example:
+
+```text
+Window = AABAB
+
+Frequency:
+A = 3
+B = 2
+
+Window Length = 5
+Max Frequency = 3
+
+Replacements Needed = 5 - 3 = 2
+```
+
+If:
+
+```text
+Window Length - Max Frequency <= k
+```
+
+the window is valid.
+
+Otherwise, shrink the window.
+
+---
+
+# How To Identify This Problem In Interviews
+
+Look for keywords such as:
+
+* Longest substring
+* Maximum length
+* At most k replacements
+* At most k changes
+* At most k modifications
+* Flip at most k values
+* Replace characters
+
+These keywords usually indicate a Sliding Window problem.
+
+---
+
+# Common Interview Variations
+
+### Variation 1
+
+Given a string and k replacements, find the longest substring consisting of the same character.
+
+### Variation 2
+
+You may change at most k characters. Find the longest sequence of identical characters.
+
+### Variation 3
+
+Flip at most k zeros in a binary array. Find the longest sequence of ones.
+
+### Variation 4
+
+Modify at most k elements in an array to make all elements equal.
+
+All of these use the same Sliding Window pattern.
+
+---
+
+# Brute Force Solution
+
+## Approach
+
+Generate every possible substring.
+
+For each substring:
+
+1. Count character frequencies.
+2. Find maximum frequency.
+3. Calculate replacements needed.
+4. Check if valid.
+5. Update answer.
+
+## Code
+
+```java
+public int characterReplacement(String s, int k) {
+
+    int n = s.length();
+    int answer = 0;
+
+    for (int i = 0; i < n; i++) {
+
+        int[] freq = new int[26];
+
+        for (int j = i; j < n; j++) {
+
+            freq[s.charAt(j) - 'A']++;
+
+            int maxFreq = 0;
+
+            for (int x = 0; x < 26; x++) {
+                maxFreq = Math.max(maxFreq, freq[x]);
+            }
+
+            int windowLength = j - i + 1;
+
+            if (windowLength - maxFreq <= k) {
+                answer = Math.max(answer, windowLength);
+            }
+        }
+    }
+
+    return answer;
+}
+```
+
+## Complexity
+
+### Time Complexity
+
+```text
+O(n²)
+```
+
+Reason:
+
+* Outer loop → O(n)
+* Inner loop → O(n)
+* Frequency scan → O(26) ≈ O(1)
+
+Overall:
+
+```text
+O(n²)
+```
+
+### Space Complexity
+
+```text
+O(26) = O(1)
+```
+
+---
+
+# Optimal Solution (Sliding Window)
+
+## Approach
+
+Maintain:
+
+* Left pointer
+* Right pointer
+* Frequency array
+* Maximum frequency inside the window
+
+Expand the window using the right pointer.
+
+If:
+
+```text
+Window Length - Max Frequency > k
+```
+
+shrink the window from the left.
+
+Keep updating the maximum valid window length.
+
+---
+
+# Optimal Java Solution
+
+```java
+public int characterReplacement(String s, int k) {
+
+    int[] freq = new int[26];
+
+    int left = 0;
+    int maxFreq = 0;
+    int maxLength = 0;
+
+    for (int right = 0; right < s.length(); right++) {
+
+        char currentChar = s.charAt(right);
+
+        freq[currentChar - 'A']++;
+
+        maxFreq = Math.max(maxFreq,
+                           freq[currentChar - 'A']);
+
+        while ((right - left + 1) - maxFreq > k) {
+
+            freq[s.charAt(left) - 'A']--;
+
+            left++;
+        }
+
+        maxLength = Math.max(maxLength,
+                             right - left + 1);
+    }
+
+    return maxLength;
+}
+```
+
+---
+
+# Dry Run
+
+Input:
+
+```java
+s = "AABABBA"
+k = 1
+```
+
+Window expansion:
+
+```text
+A
+AA
+AAB
+AABA
+```
+
+At:
+
+```text
+AABAB
+```
+
+Window Length = 5
+
+Max Frequency = 3
+
+Required Replacements:
+
+```text
+5 - 3 = 2
+```
+
+Since:
+
+```text
+2 > 1
+```
+
+window becomes invalid.
+
+Shrink from left.
+
+Continue until the window becomes valid again.
+
+Final Answer:
+
+```text
+4
+```
+
+---
+
+# Why Don't We Recalculate maxFreq While Shrinking?
+
+We update maxFreq only while expanding:
+
+```java
+maxFreq = Math.max(maxFreq,
+                   freq[currentChar - 'A']);
+```
+
+We never decrease it.
+
+Although maxFreq may become slightly outdated after shrinking, the algorithm still works correctly.
+
+This optimization avoids recalculating frequencies repeatedly and keeps the solution O(n).
+
+---
+
+# Complexity Analysis
+
+## Time Complexity
+
+Each character:
+
+* Enters the window once.
+* Leaves the window once.
+
+Therefore:
+
+```text
+O(n)
+```
+
+## Space Complexity
+
+Frequency array size:
+
+```java
+int[26]
+```
+
+Constant space.
+
+```text
+O(1)
+```
+
+---
+
+# Interview Cheat Sheet
+
+### Pattern Recognition
+
+If you see:
+
+```text
+Longest Substring
++
+At Most K Changes/Replacements/Flips
+```
+
+Think:
+
+```text
+Sliding Window
+```
+
+### Window Validation Formula
+
+```text
+Replacements Needed =
+Window Length - Max Frequency
+```
+
+### Valid Window
+
+```text
+Window Length - Max Frequency <= k
+```
+
+### Invalid Window
+
+```text
+Window Length - Max Frequency > k
+```
+
+### Complexity
+
+```text
+Brute Force:
+Time  = O(n²)
+Space = O(1)
+
+Optimal:
+Time  = O(n)
+Space = O(1)
+```
+
+### Core Interview Insight
+
+The entire problem is based on one formula:
+
+```text
+Window Length - Max Frequency <= k
+```
+
+If true, expand.
+
+If false, shrink.
+
