@@ -1126,3 +1126,603 @@ class Solution {
         return true;
     }
 }
+
+
+
+---
+
+# 4.  Minimum Window Substring (Java)
+
+## Problem Statement
+
+Given two strings:
+
+```text
+s = "ADOBECODEBANC"
+t = "ABC"
+```
+
+Return the **smallest substring** of `s` that contains **all characters** of `t`.
+
+Output:
+
+```text
+BANC
+```
+
+---
+
+# Intuition
+
+Instead of checking every possible substring, we use a **Sliding Window**.
+
+The idea is:
+
+1. Expand the window by moving the `right` pointer.
+2. Once the window contains all required characters, try shrinking it from the `left`.
+3. Keep updating the smallest valid window.
+
+---
+
+# Variables Used
+
+## target
+
+Stores the frequency of characters required from `t`.
+
+Example:
+
+```text
+t = "AABC"
+
+target
+
+A -> 2
+B -> 1
+C -> 1
+```
+
+---
+
+## window
+
+Stores the frequency of characters inside the current window.
+
+Example:
+
+```text
+Current Window = "ADOBEC"
+
+window
+
+A -> 1
+D -> 1
+O -> 1
+B -> 1
+E -> 1
+C -> 1
+```
+
+---
+
+## required
+
+Number of unique characters that must be satisfied.
+
+Example:
+
+```text
+target
+
+A
+B
+C
+```
+
+There are 3 unique characters.
+
+```java
+required = target.size();   // 3
+```
+
+This never changes.
+
+---
+
+## formed
+
+Number of unique characters currently satisfied.
+
+Initially
+
+```java
+formed = 0;
+```
+
+Example
+
+Window
+
+```text
+A
+```
+
+Target needs
+
+```text
+A=1
+```
+
+Now A is satisfied.
+
+```text
+formed = 1
+```
+
+Later
+
+Window
+
+```text
+ADOB
+```
+
+Now
+
+```text
+A satisfied
+B satisfied
+```
+
+```text
+formed = 2
+```
+
+Later
+
+```text
+ADOBEC
+```
+
+```text
+A satisfied
+B satisfied
+C satisfied
+```
+
+```text
+formed = 3
+```
+
+Now
+
+```text
+formed == required
+```
+
+The window is valid.
+
+---
+
+# Important Conditions
+
+## Condition 1
+
+```java
+if (target.containsKey(currentChar) &&
+    window.get(currentChar).intValue() == target.get(currentChar).intValue())
+{
+    formed++;
+}
+```
+
+### Why?
+
+Suppose
+
+```text
+Target
+
+A = 2
+```
+
+Window grows like
+
+```text
+A
+```
+
+Window
+
+```text
+A = 1
+```
+
+Not enough.
+
+No increment.
+
+Window becomes
+
+```text
+AA
+```
+
+Window
+
+```text
+A = 2
+```
+
+Exactly equal.
+
+Requirement satisfied.
+
+Increase
+
+```text
+formed++
+```
+
+Do **NOT** use
+
+```java
+>=
+```
+
+Otherwise
+
+```text
+AAA
+```
+
+would increase `formed` multiple times.
+
+---
+
+## Condition 2
+
+```java
+while (formed == required)
+```
+
+Meaning:
+
+Every required character is satisfied.
+
+Current window is valid.
+
+Try shrinking it.
+
+---
+
+## Condition 3
+
+```java
+if (target.containsKey(removeChar) &&
+    window.get(removeChar) < target.get(removeChar))
+{
+    formed--;
+}
+```
+
+### Why?
+
+Suppose
+
+Before removing
+
+```text
+Window
+
+A=1
+B=1
+C=1
+```
+
+Target
+
+```text
+A=1
+```
+
+Remove A.
+
+Window
+
+```text
+A=0
+```
+
+Now
+
+```text
+0 < 1
+```
+
+Requirement is broken.
+
+Decrease
+
+```text
+formed--
+```
+
+---
+
+## Condition 4
+
+```java
+if (right - left + 1 < minLength)
+```
+
+Meaning
+
+Current valid window is smaller than previous answer.
+
+Update answer.
+
+---
+
+# Java Solution (With Comments)
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+
+class Solution {
+
+    public String minWindow(String s, String t) {
+
+        // Impossible case
+        if (s.length() < t.length()) {
+            return "";
+        }
+
+        // Required character frequencies
+        Map<Character, Integer> target = new HashMap<>();
+
+        for (char ch : t.toCharArray()) {
+            target.put(ch, target.getOrDefault(ch, 0) + 1);
+        }
+
+        // Current window frequencies
+        Map<Character, Integer> window = new HashMap<>();
+
+        // Number of unique characters to satisfy
+        int required = target.size();
+
+        // Number of unique characters currently satisfied
+        int formed = 0;
+
+        // Left pointer
+        int left = 0;
+
+        // Store best answer
+        int minLength = Integer.MAX_VALUE;
+        int startIndex = 0;
+
+        // Expand window
+        for (int right = 0; right < s.length(); right++) {
+
+            char currentChar = s.charAt(right);
+
+            // Add current character into window
+            window.put(currentChar,
+                    window.getOrDefault(currentChar, 0) + 1);
+
+            /*
+             * If current character requirement is satisfied,
+             * increase formed.
+             */
+            if (target.containsKey(currentChar) &&
+                    window.get(currentChar).intValue()
+                            == target.get(currentChar).intValue()) {
+
+                formed++;
+            }
+
+            /*
+             * Window is valid.
+             * Try shrinking it.
+             */
+            while (formed == required) {
+
+                // Update minimum answer
+                if (right - left + 1 < minLength) {
+
+                    minLength = right - left + 1;
+                    startIndex = left;
+                }
+
+                char removeChar = s.charAt(left);
+
+                // Remove left character
+                window.put(removeChar,
+                        window.get(removeChar) - 1);
+
+                /*
+                 * Requirement broken?
+                 */
+                if (target.containsKey(removeChar) &&
+                        window.get(removeChar)
+                                < target.get(removeChar)) {
+
+                    formed--;
+                }
+
+                // Shrink window
+                left++;
+            }
+        }
+
+        if (minLength == Integer.MAX_VALUE)
+            return "";
+
+        return s.substring(startIndex,
+                startIndex + minLength);
+    }
+}
+```
+
+---
+
+# Dry Run
+
+Input
+
+```text
+s = ADOBECODEBANC
+t = ABC
+```
+
+Target
+
+```text
+A=1
+B=1
+C=1
+```
+
+Initially
+
+```text
+formed = 0
+required = 3
+```
+
+Expand
+
+```text
+A
+```
+
+```text
+formed = 1
+```
+
+Expand
+
+```text
+ADOB
+```
+
+```text
+formed = 2
+```
+
+Expand
+
+```text
+ADOBEC
+```
+
+```text
+formed = 3
+```
+
+Window is valid.
+
+Shrink.
+
+Remove A.
+
+```text
+formed = 2
+```
+
+Window becomes invalid.
+
+Expand again.
+
+Eventually
+
+```text
+BANC
+```
+
+becomes the smallest valid window.
+
+---
+
+# Time Complexity
+
+Each character is:
+
+- Added once by the right pointer.
+- Removed once by the left pointer.
+
+Therefore
+
+```text
+Time Complexity = O(n)
+```
+
+---
+
+# Space Complexity
+
+Using HashMap
+
+```text
+O(k)
+```
+
+where `k` is the number of unique characters stored.
+
+If ASCII arrays are used instead of HashMap,
+
+```text
+Space Complexity = O(1)
+```
+
+---
+
+# How to Identify This Problem in Interviews
+
+If the interviewer says:
+
+- Smallest substring
+- Minimum window
+- Shortest subarray
+- Contains all characters
+- Contains all words
+- Smallest contiguous segment
+
+Think immediately:
+
+```text
+Variable Size Sliding Window
+```
+
+---
+
+# Sliding Window Pattern
+
+```text
+Expand Right
+        ↓
+Window Valid?
+        ↓
+No → Keep Expanding
+        ↓
+Yes
+        ↓
+Update Answer
+        ↓
+Shrink Left
+        ↓
+Window Invalid
+        ↓
+Expand Again
+```
+
+This same pattern is used in many interview questions like:
+
+- Minimum Window Substring
+- Longest Substring Without Repeating Characters
+- Find All Anagrams in a String
+- Permutation in String
+- Minimum Size Subarray Sum
+- Fruit Into Baskets
+- Longest Repeating Character Replacement
