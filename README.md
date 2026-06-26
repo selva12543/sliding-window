@@ -969,3 +969,160 @@ If true, expand.
 
 If false, shrink.
 
+---
+
+# Permutation in String - Brute Force Approach
+
+---
+
+## Problem Statement
+
+Given two strings `s1` and `s2`, return true if any permutation of `s1` is a substring of `s2`.
+
+---
+
+## Key Idea
+
+We are checking:
+> Does any substring of length `s1.length()` contain the same characters as `s1`?
+
+Instead of using frequency, we:
+- Generate all substrings
+- Sort and compare
+
+---
+
+## Approach
+
+1. Take every substring of size `k = s1.length()`
+2. Sort `s1`
+3. Sort substring
+4. Compare
+
+If match → return true
+
+---
+
+## Code
+
+```java
+import java.util.Arrays;
+
+class Solution {
+
+    public boolean checkInclusion(String s1, String s2) {
+
+        int k = s1.length();
+
+        if (k > s2.length())
+            return false;
+
+        char[] arr = s1.toCharArray();
+        Arrays.sort(arr);
+        String target = new String(arr);
+
+        for (int i = 0; i <= s2.length() - k; i++) {
+
+            String sub = s2.substring(i, i + k);
+
+            char[] temp = sub.toCharArray();
+            Arrays.sort(temp);
+
+            if (target.equals(new String(temp)))
+                return true;
+        }
+
+        return false;
+    }
+}
+
+
+---
+
+---
+
+### 📄 File 2: SlidingWindow_Optimal_PermutationInString.md
+
+```md
+# Permutation in String - Sliding Window (Optimal)
+
+---
+
+## Problem Statement
+
+Return true if any permutation of `s1` exists as a substring in `s2`.
+
+---
+
+## Key Idea
+
+Instead of generating permutations:
+
+> Compare character frequencies.
+
+A permutation means:
+- Same characters
+- Same frequency
+
+---
+
+## Approach
+
+We use:
+- `need[]` → frequency of s1
+- `window[]` → frequency of current window in s2
+
+### Sliding Window Trick
+
+Instead of rebuilding every window:
+- Add new character (right side)
+- Remove old character (left side)
+
+---
+
+## Code
+
+```java
+class Solution {
+
+    public boolean checkInclusion(String s1, String s2) {
+
+        int k = s1.length();
+
+        if (k > s2.length())
+            return false;
+
+        int[] need = new int[26];
+        int[] window = new int[26];
+
+        for (char c : s1.toCharArray()) {
+            need[c - 'a']++;
+        }
+
+        for (int i = 0; i < k; i++) {
+            window[s2.charAt(i) - 'a']++;
+        }
+
+        if (matches(need, window))
+            return true;
+
+        for (int i = k; i < s2.length(); i++) {
+
+            window[s2.charAt(i) - 'a']++;      // add new character
+            window[s2.charAt(i - k) - 'a']--;  // remove old character
+
+            if (matches(need, window))
+                return true;
+        }
+
+        return false;
+    }
+
+    private boolean matches(int[] a, int[] b) {
+        for (int i = 0; i < 26; i++) {
+            if (a[i] != b[i])
+                return false;
+        }
+        return true;
+    }
+}
